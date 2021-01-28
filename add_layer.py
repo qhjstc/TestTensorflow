@@ -1,5 +1,6 @@
 """
 Build the first network
+it comes from https://www.bilibili.com/video/BV1Lx411j7ws?p=16
 """
 import tensorflow as tsf
 import numpy as np
