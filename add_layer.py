@@ -1,6 +1,7 @@
 
 import tensorflow as tsf
 
+tsf.compat.v1.disable_eager_execution()       # in tensorflow 2.0 eager execution is enabled by default
 tf = tsf.compat.v1            # change the version
 
 
