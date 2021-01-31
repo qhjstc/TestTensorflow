@@ -8,6 +8,7 @@ This example is from BilBil https://www.bilibili.com/video/BV1Lx411j7ws?p=9
 import tensorflow as tf
 import numpy as np
 
+
 tf.compat.v1.disable_eager_execution()       # in tensorflow 2.0 eager execution is enabled by default
 
 # creat data

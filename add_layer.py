@@ -4,6 +4,7 @@ it comes from https://www.bilibili.com/video/BV1Lx411j7ws?p=16
 """
 import tensorflow as tsf
 import numpy as np
+import matplotlib.pyplot as plt
 
 tsf.compat.v1.disable_eager_execution()       # in tensorflow 2.0 eager execution is enabled by default
 tf = tsf.compat.v1            # change the version
@@ -27,17 +28,34 @@ if __name__ == "__main__":
 
     xs = tf.placeholder(tf.float32, [None, 1])
     ys = tf.placeholder(tf.float32, [None, 1])
-    l1 = add_layer(xs, 1, 10, activation_function=tf.nn.relu)        # build 10 neuron in the first layer
+    l1 = add_layer(xs, 1, 10, activation_function=tf.nn.tanh)        # build 10 neuron in the first layer
     prediction = add_layer(l1, 10, 1, activation_function=None)      # build the second layer
 
-    loss = tf.reduce_mean(tf.reduce_sum(tf.square(ys - prediction),
+    loss = tf.reduce_mean(tf.reduce_sum(tf.square(ys - prediction),  # Calculate the average sum
                                         reduction_indices=[1]))
     train_step = tf.train.GradientDescentOptimizer(0.1).minimize(loss)     # reduce loss
     init = tf.initialize_all_variables()
 
     with tf.Session() as sess:
         sess.run(init)
+
+        fig = plt.figure()  # build a figure
+        ax = fig.add_subplot(1, 1, 1)  # Add a subplot
+        ax.scatter(x_data, y_data)
+        plt.ion()  # Make the display continuous
+        # plt.show(block=False)
         for i in range(1000):
             sess.run(train_step, feed_dict={xs: x_data, ys: y_data})
             if i % 50 == 0:
-                print(sess.run(loss, feed_dict={xs: x_data, ys: y_data}))
+                # print(sess.run(loss, feed_dict={xs: x_data, ys: y_data}))
+                try:
+                    ax.lines.remove(lines[0])
+                except Exception:
+                    pass
+                prediction_value = sess.run(prediction, feed_dict={xs: x_data})
+                lines = ax.plot(x_data, prediction_value, 'r-', lw=5)            # lw is width
+                plt.pause(0.1)
+        plt.ioff()  # Close interactive mode
+        plt.pause(0)
+
+
