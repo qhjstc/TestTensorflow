@@ -11,14 +11,18 @@ tf = tsf.compat.v1            # change the version
 
 
 def add_layer(inputs, in_size, out_size, activation_function=None):
-    weights = tf.Variable(tf.random_normal([in_size, out_size]))       # Create a random matrix
-    biases = tf.Variable(tf.zeros([1,out_size]) + 0.1)        # Generally, it is not set to 0, so we set it to 0.1
-    wx_plus_b = tf.matmul(inputs, weights) + biases           # matrix multiplication, but i have some questions in here
-    if activation_function is None:
-        outputs = wx_plus_b
-    else:
-        outputs = activation_function(wx_plus_b)             # Excitation equation
-    return outputs
+    with tf.name_scope('layer'):
+        with tf.name_scope('weight'):
+            weights = tf.Variable(tf.random_normal([in_size, out_size]))       # Create a random matrix
+        with tf.name_scope('biases'):
+            biases = tf.Variable(tf.zeros([1,out_size]) + 0.1)        # Generally, it is not set to 0, so we set it to 0.1
+        with tf.name_scope('Wx_plus_b'):
+            wx_plus_b = tf.matmul(inputs, weights) + biases           # matrix multiplication, but i have some questions in here
+        if activation_function is None:
+            outputs = wx_plus_b
+        else:
+            outputs = activation_function(wx_plus_b)             # Excitation equation
+        return outputs
 
 
 if __name__ == "__main__":
@@ -26,17 +30,26 @@ if __name__ == "__main__":
     noise = np.random.normal(0, 0.05, x_data.shape)
     y_data = np.square(x_data) - 0.5 + noise
 
-    xs = tf.placeholder(tf.float32, [None, 1])
-    ys = tf.placeholder(tf.float32, [None, 1])
-    l1 = add_layer(xs, 1, 10, activation_function=tf.nn.tanh)        # build 10 neuron in the first layer
-    prediction = add_layer(l1, 10, 1, activation_function=None)      # build the second layer
+    # define placeholder for input to network
+    with tf.name_scope('input'):
+        xs = tf.placeholder(tf.float32, [None, 1], name='x_input')
+        ys = tf.placeholder(tf.float32, [None, 1], name='y_input')
 
-    loss = tf.reduce_mean(tf.reduce_sum(tf.square(ys - prediction),  # Calculate the average sum
-                                        reduction_indices=[1]))
-    train_step = tf.train.GradientDescentOptimizer(0.1).minimize(loss)     # reduce loss
+    # add hidden layer
+    l1 = add_layer(xs, 1, 10, activation_function=tf.nn.tanh)
+    # add output layer
+    prediction = add_layer(l1, 10, 1, activation_function=None)
+
+    with tf.name_scope('loss'):
+        loss = tf.reduce_mean(tf.reduce_sum(tf.square(ys - prediction),  # Calculate the average sum
+                                            reduction_indices=[1]))
+    with tf.name_scope('train'):
+        train_step = tf.train.GradientDescentOptimizer(0.1).minimize(loss)     # reduce loss
     init = tf.initialize_all_variables()
 
     with tf.Session() as sess:
+        writer = tf.summary.FileWriter("logs/", sess.graph)
+        # and then use terminal to input "tensorboard --logdir log"
         sess.run(init)
 
         fig = plt.figure()  # build a figure
@@ -56,6 +69,6 @@ if __name__ == "__main__":
                 lines = ax.plot(x_data, prediction_value, 'r-', lw=5)            # lw is width
                 plt.pause(0.1)
         plt.ioff()  # Close interactive mode
-        plt.pause(0)
+        # plt.pause(0)
 
 
