@@ -10,12 +10,14 @@ tsf.compat.v1.disable_eager_execution()       # in tensorflow 2.0 eager executio
 tf = tsf.compat.v1            # change the version
 
 
-def add_layer(inputs, in_size, out_size, activation_function=None):
+def add_layer(inputs, in_size, out_size, n_layer, activation_function=None):
+    layer_name = "layer%s" % n_layer
     with tf.name_scope('layer'):
         with tf.name_scope('weight'):
             weights = tf.Variable(tf.random_normal([in_size, out_size]))       # Create a random matrix
+            tf.summary.histogram(layer_name+':Weight', weights)
         with tf.name_scope('biases'):
-            biases = tf.Variable(tf.zeros([1,out_size]) + 0.1)        # Generally, it is not set to 0, so we set it to 0.1
+            biases = tf.Variable(tf.zeros([1, out_size]) + 0.1)        # Generally, it is not set to 0, so we set it to 0.1
         with tf.name_scope('Wx_plus_b'):
             wx_plus_b = tf.matmul(inputs, weights) + biases           # matrix multiplication, but i have some questions in here
         if activation_function is None:
@@ -36,20 +38,24 @@ if __name__ == "__main__":
         ys = tf.placeholder(tf.float32, [None, 1], name='y_input')
 
     # add hidden layer
-    l1 = add_layer(xs, 1, 10, activation_function=tf.nn.tanh)
+    l1 = add_layer(xs, 1, 10, n_layer=1, activation_function=tf.nn.tanh)
     # add output layer
-    prediction = add_layer(l1, 10, 1, activation_function=None)
+    prediction = add_layer(l1, 10, 1, n_layer=2, activation_function=None)
 
     with tf.name_scope('loss'):
         loss = tf.reduce_mean(tf.reduce_sum(tf.square(ys - prediction),  # Calculate the average sum
                                             reduction_indices=[1]))
+        tf.summary.scalar('loss', loss)
+
     with tf.name_scope('train'):
         train_step = tf.train.GradientDescentOptimizer(0.1).minimize(loss)     # reduce loss
     init = tf.initialize_all_variables()
 
     with tf.Session() as sess:
+        merged = tf.summary.merge_all()
         writer = tf.summary.FileWriter("logs/", sess.graph)
-        # and then use terminal to input "tensorboard --logdir log"
+        # And then use terminal to input "tensorboard --logdir=logs"
+        # Pay attention to run in the root directory, not in logs
         sess.run(init)
 
         fig = plt.figure()  # build a figure
@@ -68,6 +74,10 @@ if __name__ == "__main__":
                 prediction_value = sess.run(prediction, feed_dict={xs: x_data})
                 lines = ax.plot(x_data, prediction_value, 'r-', lw=5)            # lw is width
                 plt.pause(0.1)
+
+                # add result
+                result = sess.run(merged, feed_dict={xs: x_data, ys: y_data})
+                writer.add_summary(result, i)
         plt.ioff()  # Close interactive mode
         # plt.pause(0)
 
