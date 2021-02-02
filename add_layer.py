@@ -12,18 +12,20 @@ tf = tsf.compat.v1            # change the version
 
 def add_layer(inputs, in_size, out_size, n_layer, activation_function=None):
     layer_name = "layer%s" % n_layer
-    with tf.name_scope('layer'):
+    with tf.name_scope(layer_name):
         with tf.name_scope('weight'):
             weights = tf.Variable(tf.random_normal([in_size, out_size]))       # Create a random matrix
             tf.summary.histogram(layer_name+':Weight', weights)
         with tf.name_scope('biases'):
             biases = tf.Variable(tf.zeros([1, out_size]) + 0.1)        # Generally, it is not set to 0, so we set it to 0.1
+            tf.summary.histogram(layer_name + ':Biases', biases)
         with tf.name_scope('Wx_plus_b'):
             wx_plus_b = tf.matmul(inputs, weights) + biases           # matrix multiplication, but i have some questions in here
         if activation_function is None:
             outputs = wx_plus_b
         else:
             outputs = activation_function(wx_plus_b)             # Excitation equation
+        tf.summary.histogram(layer_name + ':Outputs', outputs)
         return outputs
 
 
