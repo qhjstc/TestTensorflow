@@ -26,8 +26,8 @@ def plot_image(ti, predictions_array, true_label, img):
 
     plt.xlabel("{} {:2.0f}% ({})".format(class_names[int(predicted_label)],
                                          100*np.max(predictions_array),
-                                         class_names[true_label],
-                                         color=color))
+                                         class_names[true_label]),
+                                         color=color)
 
 
 def plot_value_array(ti, predictions_array, true_label):
@@ -92,12 +92,22 @@ if __name__ == "__main__":
     print("Prediction label is " + str(np.argmax(predictions[0])))
 
     # plot prediction
-    i = 0
+    i = 20
     plt.figure(figsize=(6, 3))
     plt.subplot(1, 2, 1)
     plot_image(i, predictions[i], test_labels, test_images)
     plt.subplot(1, 2, 2)
     plot_value_array(i, predictions[i], test_labels)
+    plt.show()
+
+    # Grab an image from the dataset .
+    plt.figure(figsize=(9, 4.5))
+    img = test_images[1]
+    # Add an image to batch where it is the only member .
+    img = (np.expand_dims(img, 0))
+    predictions_single = probability_model.predict(img)
+    plot_value_array(1, predictions_single[0], test_labels)
+    _ = plt.xticks(range(10), class_names, rotation=45)
     plt.show()
 
 
